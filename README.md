@@ -1,12 +1,12 @@
-\# PolyGen – Generative Text-to-3D Asset Pipeline
+
+
+\# PolyGen - Generative Text-to-3D Asset Pipeline
 
 
 
 \## Project Overview
 
-PolyGen is a Generative AI project designed to transform
-
-text descriptions into 3D assets.
+PolyGen is a Generative AI project designed to transform text descriptions into 3D assets.
 
 
 
@@ -42,29 +42,62 @@ text descriptions into 3D assets.
 
 \## Backend Structure
 
-
+```text
 
 backend/
 
-\- main.py
+├── main.py
 
-\- api/
+├── api/
 
-\- schemas/
+├── schemas/
 
-\- services/
+├── services/
 
-\- storage/
+├── storage/
 
-\- tests/
+│   ├── uploads/
+
+│   └── generated/
+
+└── tests/
+
+```
 
 
 
 \## Run the Backend
 
-
-
 ```bash
 
 uvicorn backend.main:app --reload
+
+```
+
+
+
+\## API Documentation
+
+http://127.0.0.1:8000/docs
+
+
+
+\## Run Tests
+
+```bash
+
+python -m pytest backend/tests -v
+
+```
+
+
+
+\## Current Development Status
+
+Backend foundation and prompt validation completed.
+
+Actual 3D generation integration is pending.
+
+
+
 
