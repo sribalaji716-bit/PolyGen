@@ -1,6 +1,20 @@
 
+import pytest
+
 from fastapi.testclient import TestClient
 from backend.main import app
+from backend.api import prompt as prompt_api
+
+client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def disable_real_generation(monkeypatch):
+    monkeypatch.setattr(
+        prompt_api,
+        "run_generation",
+        lambda job_id: None
+    )
 
 client = TestClient(app)
 

@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 
 from backend.schemas.prompt import PromptRequest
 from backend.schemas.job import GenerationJob, JobStatusUpdate
@@ -8,13 +8,23 @@ from backend.services.job_service import (
     get_job,
     update_job_status
 )
+from backend.services.generation_service import run_generation
 
 router = APIRouter()
 
 
 @router.post("/generate", response_model=GenerationJob)
-def generate_asset(request: PromptRequest):
+def generate_asset(
+    request: PromptRequest,
+    background_tasks: BackgroundTasks
+):
     job = create_job(request.prompt)
+
+    background_tasks.add_task(
+        run_generation,
+        job.job_id
+    )
+
     return job
 
 
