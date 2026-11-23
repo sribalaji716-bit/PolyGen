@@ -4,6 +4,7 @@ from uuid import uuid4
 from backend.schemas.job import GenerationJob, JobStatus
 from backend.storage.database import get_connection
 
+
 def create_job(prompt: str) -> GenerationJob:
     job = GenerationJob(
         job_id=str(uuid4()),
@@ -34,6 +35,7 @@ def create_job(prompt: str) -> GenerationJob:
 
     return job
 
+
 def get_job(job_id: str):
     connection = get_connection()
 
@@ -59,6 +61,35 @@ def get_job(job_id: str):
         status=JobStatus(row["status"]),
         asset_path=row["asset_path"]
     )
+
+
+def list_jobs(limit: int = 10, offset: int = 0):
+    connection = get_connection()
+
+    try:
+        rows = connection.execute(
+            """
+            SELECT job_id, prompt, status, asset_path
+            FROM generation_jobs
+            ORDER BY rowid DESC
+            LIMIT ? OFFSET ?
+            """,
+            (limit, offset)
+        ).fetchall()
+
+    finally:
+        connection.close()
+
+    return [
+        GenerationJob(
+            job_id=row["job_id"],
+            prompt=row["prompt"],
+            status=JobStatus(row["status"]),
+            asset_path=row["asset_path"]
+        )
+        for row in rows
+    ]
+
 
 def update_job_status(
     job_id: str,
