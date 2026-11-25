@@ -1,5 +1,8 @@
 
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi.responses import FileResponse
 
 from backend.schemas.prompt import PromptRequest
 from backend.schemas.job import GenerationJob, JobStatusUpdate
@@ -9,6 +12,7 @@ from backend.services.job_service import (
     update_job_status
 )
 from backend.services.generation_service import run_generation
+
 
 router = APIRouter()
 
@@ -42,8 +46,14 @@ def get_generation_status(job_id: str):
 
 
 @router.patch("/status/{job_id}", response_model=GenerationJob)
-def update_generation_status(job_id: str, request: JobStatusUpdate):
-    job = update_job_status(job_id, request.status)
+def update_generation_status(
+    job_id: str,
+    request: JobStatusUpdate
+):
+    job = update_job_status(
+        job_id,
+        request.status
+    )
 
     if not job:
         raise HTTPException(
@@ -52,3 +62,51 @@ def update_generation_status(job_id: str, request: JobStatusUpdate):
         )
 
     return job
+
+
+@router.get("/download/{job_id}")
+def download_generated_asset(job_id: str):
+
+    job = get_job(job_id)
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Generation job not found"
+        )
+
+    if job.status != "completed":
+        raise HTTPException(
+            status_code=400,
+            detail="3D generation is not completed yet"
+        )
+
+    if not job.asset_path:
+        raise HTTPException(
+            status_code=404,
+            detail="Generated asset path not found"
+        )
+
+    output_dir = (
+        Path(__file__).resolve().parents[1]
+        / "storage"
+        / "generated"
+    ).resolve()
+
+    asset_path = Path(job.asset_path).resolve()
+
+    if (
+        asset_path.suffix.lower() != ".glb"
+        or not asset_path.is_relative_to(output_dir)
+        or not asset_path.is_file()
+    ):
+        raise HTTPException(
+            status_code=404,
+            detail="Valid GLB asset not found"
+        )
+
+    return FileResponse(
+        path=asset_path,
+        media_type="model/gltf-binary",
+        filename=f"polygen_{job_id}.glb"
+    )
